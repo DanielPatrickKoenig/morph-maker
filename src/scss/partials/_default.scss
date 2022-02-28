@@ -1,0 +1,12 @@
+.stage-container{
+    position: relative;
+    width: $stageWidth;
+    height: $stageHeight;
+    canvas, svg{
+        width: $stageWidth;
+        height: $stageHeight;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
