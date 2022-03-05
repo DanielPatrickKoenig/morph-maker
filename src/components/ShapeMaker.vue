@@ -26,7 +26,7 @@ import SVGShape from '../classes/SVGShape';
 import MDirective from '../classes/MDirective';
 import LDirective from '../classes/LDirective';
 import SDirective from '../classes/SDirective';
-import CDirective from '../classes/SDirective';
+import CDirective from '../classes/CDirective';
 import ZDirective from '../classes/ZDirective';
 import ShapeEditor, { Modes, Types } from '../classes/ShapeEditor';
 import AddPointModal from './AddPointModal.vue';
@@ -77,6 +77,7 @@ export default {
         onAddPoint(position){
             console.log('point added clicked');
             this.addPosition = position;
+            this.addIndex = position.index === undefined ? -1 : position.index ;
             this.adding = true;
         },
         modeChange(mode){

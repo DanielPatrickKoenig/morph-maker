@@ -13,13 +13,18 @@ export default class ShapeEditor{
         this.addHandler = addHandler;
         this.pointContainer = this.utils.sprite();
         this.addButton = this.draw.rect({ width: this.width, height: this.height, fillOpacity: .1 });
+        this.lineProperties = { stroke: 0xdddddd, strokeWidth: 4, strokeOpacity: .75, fillOpacity: .0001 };
+        this.insertLine = this.draw.line([{x: -10, y: -10}, {x: -20, y: -10}], this.lineProperties);
+        this.instance.getApp().stage.addChild(this.insertLine);
         this.instance.getApp().stage.addChild(this.pointContainer);
         this.instance.getApp().stage.addChild(this.addButton);
+        this.insertContainer = this.utils.sprite();
+        this.instance.getApp().stage.addChild(this.insertContainer);
         this.action.click(this.addButton, (e) => {
             if(this.addHandler){
                 this.addHandler({ x: e.x, y: e.y });
             }
-        })
+        });
         this.setMode(Modes.ADD);
     }
     setMode(mode){
@@ -58,6 +63,7 @@ export default class ShapeEditor{
                         if(this.updateHandler){
                             this.updateHandler({ directive, index, position: { x: e.x, y: e.y } });
                         }
+                        this.arrangeInsertButtons();
                     }
                     
                 });
@@ -66,6 +72,7 @@ export default class ShapeEditor{
                         if(this.updateHandler){
                             this.updateHandler({ directive, index, position: { x: e.x, y: e.y } });
                         }
+                        this.arrangeInsertButtons();
                     }
                     this.dragTarget = null;
                 });
@@ -78,6 +85,10 @@ export default class ShapeEditor{
         else {
             this.directiveManifest.splice(index, 0, { directive, pointers });
         }
+        if(this.getDirectivePositions().length > 1) {
+            this.addInsertButton();
+            this.arrangeInsertButtons();
+        }
     }
     removeDirective(directive){
         const targetIndex = this.directiveManifest.map((item, index) => {
@@ -86,7 +97,45 @@ export default class ShapeEditor{
         this.directiveManifest[targetIndex].pointers.forEach(item => {
             this.pointContainer.removeChild(item);
         });
+        if(directive.name.toUpperCase() !== 'Z'){
+            this.removeInsertButton();
+        }
         this.directiveManifest.splice(targetIndex, 1);
+    }
+    addInsertButton(){
+        const button = this.utils.sprite();
+        const circle = this.draw.circle({ fill: 0xffffff, stroke: 0x000000, strokeWidth: 2, strokeOpacity: 1 });
+        button.addChild(circle);
+        this.action.click(button, (e) => {
+            if(this.addHandler){
+                this.addHandler({ x: e.x, y: e.y, index: button.name });
+            }
+        });
+        this.insertContainer.addChild(button);
+    }
+    removeInsertButton(){
+        if(this.insertContainer.children.length){
+            this.insertContainer.removeChild(this.insertContainer.children[0]);
+            this.arrangeInsertButtons();
+        }
+    }
+    arrangeInsertButtons(){
+        const positions = this.getDirectivePositions();
+        this.insertContainer.children.forEach((item, index) => {
+            item.name = index + 1;
+            item.x = positions[index].x + ((positions[index + 1].x - positions[index].x) / 2);
+            item.y = positions[index].y + ((positions[index + 1].y - positions[index].y) / 2)
+        });
+        this.insertLine = this.draw.line(positions, this.lineProperties, this.insertLine);
+
+    }
+    getDirectivePositions(){
+        return this.directiveManifest
+            .filter(item => item.directive.name.toUpperCase() !== 'Z')
+            .map(item => {
+                const pointer = item.pointers[item.pointers.length - 1]
+                return { x: pointer.x, y: pointer.y };
+            });
     }
 }
 export const Modes = {
