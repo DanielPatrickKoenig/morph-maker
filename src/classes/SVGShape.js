@@ -4,6 +4,7 @@ export default class SVGShape{
         this.attributes = attributes;
     }
     addDirective(directive, index){
+        console.log(directive);
         if(index === undefined){
             this.directives.push(directive);
         }
@@ -12,7 +13,11 @@ export default class SVGShape{
         }
         
     }
+    removeDirective(index){
+        this.directives.splice(index, 1);
+    }
     render(){
+        // console.log(this.directives);
         return this.directives.map(item => item.process()).join('');
     }
 }

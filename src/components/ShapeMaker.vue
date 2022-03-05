@@ -5,7 +5,18 @@
                 <a @click="modeChange(m)">{{ m }}</a>
             </li>
         </ul>
-        <div class="stage-container">
+        <button @click="addKeyFrame">Add Keyframe</button>
+        <ul>
+            <li 
+                v-for="(frame, i) in keyFrameManager.frames"
+                :key="`frame-${i}`"
+            >
+                <a @click="setKeyFrame(frame)">{{i}}</a>
+            </li>
+        </ul>
+        <div 
+            class="stage-container"
+        >
             <svg>
                 <path :d="d" fill="#000000" />
             </svg>
@@ -22,13 +33,8 @@
 </template>
 
 <script>
-import SVGShape from '../classes/SVGShape';
-import MDirective from '../classes/MDirective';
-import LDirective from '../classes/LDirective';
-import SDirective from '../classes/SDirective';
-import CDirective from '../classes/CDirective';
-import ZDirective from '../classes/ZDirective';
-import ShapeEditor, { Modes, Types } from '../classes/ShapeEditor';
+import KeyFrameManager from '../classes/KeyFrameManager';
+import { Modes, Types } from '../classes/ShapeEditor';
 import AddPointModal from './AddPointModal.vue';
 const modes = Modes;
 const types = Types;
@@ -39,8 +45,8 @@ export default {
     data(){
         return {
             d: '',
-            shape: {},
-            editor: {},
+            keyFrameManager: {},
+            currentKeyFrame: {},
             modes,
             types,
             adding: false,
@@ -48,34 +54,31 @@ export default {
                 x: 0,
                 y: 0
             },
-            addIndex: -1
+            addIndex: -1,
         };
     },
-    created(){
-        // const directives = [
-        //     new MDirective(true, [20, 18]),
-        //     new SDirective(true, [30, 22 ,50, 18]),
-        //     new SDirective(true, [50, 41, 58, 72]),
-        //     new LDirective(true, [30, 68]),
-        //     new ZDirective(true)
-        // ];
-        this.shape = new SVGShape({directives: []});
-        this.d = this.shape.render();
-        
-        
+    computed: {
+        shape () {
+            return this.currentKeyFrame ? this.currentKeyFrame.shape : null;
+        },
+        editor () {
+            return this.keyFrameManager.editor ? this.keyFrameManager.editor : null;
+        }
     },
     methods: {
         onShapeUpdate(data){
             console.log(data);
+            console.log(this.editor.directiveManifest);
             const targetDirective = this.editor.directiveManifest.find(item => item.directive.id === data.directive.id).directive;
-            console.log(targetDirective);
+            // console.log(targetDirective);
             targetDirective.updateValue(data.index * 2, data.position.x);
             targetDirective.updateValue((data.index * 2) + 1, data.position.y);
             this.d = this.shape.render();
+            console.log(this.keyFrameManager.frames.map(item => item.shape.directives[0].id));
             // console.log(data);
         },
         onAddPoint(position){
-            console.log('point added clicked');
+            // console.log('point added clicked');
             this.addPosition = position;
             this.addIndex = position.index === undefined ? -1 : position.index ;
             this.adding = true;
@@ -86,45 +89,24 @@ export default {
         onPointModalClose(e){
             if(e){
                 const values = e.feilds.map(item => item.value);
-                let directive = null;
-                switch(e.type){
-                    case Types.M:{
-                        directive = new MDirective(true, values);
-                        break;
-                    }
-                    case Types.L:{
-                        directive = new LDirective(true, values);
-                        break;
-                    }
-                    case Types.S:{
-                        directive = new SDirective(true, values);
-                        break;
-                    }
-                    case Types.C:{
-                        directive = new CDirective(true, values);
-                        break;
-                    }
-                    case Types.Z:{
-                        directive = new ZDirective(true);
-                        break;
-                    }
-                }
-                const index = e.index >= 0 ? e.index : undefined;
-                this.editor.addDirective(directive, index);
-                this.shape.addDirective(directive, index);
+                this.keyFrameManager.insertDirective(e.type, values, e.index >= 0 ? e.index : undefined);
                 this.d = this.shape.render();
             }
             this.adding = false;
             this.addIndex = -1;
+        },
+        addKeyFrame(){
+            this.keyFrameManager.addKeyFrame(this.keyFrameManager.frames[0]);
+        },
+        setKeyFrame(frame){
+            this.currentKeyFrame = frame;
+            this.editor.mapToDirectives(this.shape.directives);
         }
     },
     mounted () {
-        this.editor = new ShapeEditor(this.$refs.stage);
-        this.editor.setUpdateHandler(this.onShapeUpdate);
-        this.editor.setAddHandler(this.onAddPoint);
-        this.shape.directives.forEach(item => {
-            this.editor.addDirective(item);
-        })
+        this.keyFrameManager = new KeyFrameManager(this.$refs.stage, this.onShapeUpdate, this.onAddPoint);
+        this.currentKeyFrame = this.keyFrameManager.frames[0];
+        this.d = this.shape.render();
     }
 }
 </script>

@@ -25,7 +25,7 @@ export default class ShapeEditor{
                 this.addHandler({ x: e.x, y: e.y });
             }
         });
-        this.setMode(Modes.ADD);
+        this.setMode(Modes.EDIT);
     }
     setMode(mode){
         this.addButton.visible = mode === Modes.ADD;
@@ -36,7 +36,9 @@ export default class ShapeEditor{
     setAddHandler(handler){
         this.addHandler = handler;
     }
-    addDirective(directive, index){
+    addDirective(_directive, index){
+        const _index = index === undefined ? this.directiveManifest.length : index;
+        const directive = _directive;
         let pointers = [];
         if(directive.values.length > 1){
             pointers = [...new Array(directive.values.length / 2).keys()].map(item => {
@@ -61,7 +63,7 @@ export default class ShapeEditor{
                         this.dragTarget.x = e.x;
                         this.dragTarget.y = e.y;
                         if(this.updateHandler){
-                            this.updateHandler({ directive, index, position: { x: e.x, y: e.y } });
+                            this.updateHandler({ directive: this.directiveManifest[_index].directive, index, position: { x: e.x, y: e.y } });
                         }
                         this.arrangeInsertButtons();
                     }
@@ -70,7 +72,7 @@ export default class ShapeEditor{
                 this.action.up(pointer, (e) => {
                     if(this.dragTarget === pointer){
                         if(this.updateHandler){
-                            this.updateHandler({ directive, index, position: { x: e.x, y: e.y } });
+                            this.updateHandler({ directive: this.directiveManifest[_index].directive, index, position: { x: e.x, y: e.y } });
                         }
                         this.arrangeInsertButtons();
                     }
@@ -136,6 +138,29 @@ export default class ShapeEditor{
                 const pointer = item.pointers[item.pointers.length - 1]
                 return { x: pointer.x, y: pointer.y };
             });
+    }
+    mapToDirectives(directives){
+        // console.log(directives);
+        const newManifest = directives.map((item, index) => {
+            const pointers = this.directiveManifest[index].pointers;
+            [...new Array(item.values.length / 2).keys()].forEach(_item => {
+                console.log(pointers[_item]);
+                if(pointers[_item]){
+                    pointers[_item].x = item.values[_item * 2];
+                    pointers[_item].y = item.values[(_item * 2) + 1];
+                }
+            });
+            return { directive: item, pointers };
+        });
+        this.directiveManifest = newManifest;
+        console.log(this.directiveManifest);
+        this.arrangeInsertButtons();
+        this.directiveManifest.forEach((item) => {
+            item.pointers.forEach((_item, _index) => {
+                this.updateHandler({ directive: item.directive, index: _index, position: {x: _item.x, y: _item.y} });
+            });
+        });
+        
     }
 }
 export const Modes = {
