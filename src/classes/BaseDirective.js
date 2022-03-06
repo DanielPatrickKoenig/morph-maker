@@ -1,8 +1,9 @@
+import {createUniqueID} from '../utils/Utilities';
 export default class BaseDirective{
     constructor(name, isAbsolute, values){
         this.name = isAbsolute ? name.toUpperCase() : name.toLowerCase();
         this.values = values ? values : [];
-        this.id = `${Math.random().toString().split('.').join('')}-${Math.random().toString().split('.').join('')}-${Math.random().toString().split('.').join('')}`;
+        this.id = createUniqueID();
     }
     setId(id){
         this.id = id;

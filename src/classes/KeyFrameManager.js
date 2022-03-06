@@ -11,14 +11,17 @@ export default class KeyFrameManager{
         this.addHandler = addHandler;
         this.editor = new ShapeEditor(stage, 1000, 800, updateHandler, addHandler);
         this.frames = [new KeyFrame()];
+        this.positionCount = 100;
         
     }
-    addKeyFrame(copyFrom, index){
+    addKeyFrame(copyFrom, position, index){
+        const frameCopy = this.copy(copyFrom);
+        frameCopy.position = position ? position : copyFrom.position + 1;
         if(index === undefined){
-            this.frames.push(this.copy(copyFrom));
+            this.frames.push(frameCopy);
         }
         else{
-            this.frames.splice(index, 0, this.copy(copyFrom));
+            this.frames.splice(index, 0, frameCopy);
         }
         
     }
@@ -70,7 +73,7 @@ export default class KeyFrameManager{
         //  
         if(!id){
             this.frames.forEach(item => item.insertDirective(directive, index));
-            this.editor.addDirective(directive);
+            this.editor.addDirective(directive, index);
         }
         return directive;
     }

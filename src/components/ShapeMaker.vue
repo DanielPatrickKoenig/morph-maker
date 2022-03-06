@@ -5,15 +5,7 @@
                 <a @click="modeChange(m)">{{ m }}</a>
             </li>
         </ul>
-        <button @click="addKeyFrame">Add Keyframe</button>
-        <ul>
-            <li 
-                v-for="(frame, i) in keyFrameManager.frames"
-                :key="`frame-${i}`"
-            >
-                <a @click="setKeyFrame(frame)">{{i}}</a>
-            </li>
-        </ul>
+        <button @click="openFrameModal(currentKeyFrame.position + 1)">Add Keyframe</button>
         <div 
             class="stage-container"
         >
@@ -22,12 +14,35 @@
             </svg>
             <canvas ref="stage"></canvas>
         </div>
+        <TimeLine 
+            v-if="keyFrameManager.positionCount"
+            :frame-count="keyFrameManager.positionCount"
+        >
+            <div 
+                v-for="(frame, i) in keyFrameManager.frames"
+                :key="`key-frame-${i}`"
+                :slot="frame.position"
+                
+            >
+                <a class="frame-marker" @click="setKeyFrame(frame)">{{frame.position}}</a>
+                <a class="frame-editor" @click="openFrameModal(frame.position, i)">E</a>
+                
+            </div>
+        </TimeLine>
         <AddPointModal 
             v-if="adding"
             :x="addPosition.x"
             :y="addPosition.y"
             :index="addIndex"
             @close="onPointModalClose" 
+        />
+        <FrameModal
+            v-if="frameProps.adding"
+            :frame="frameProps.frameToAdd"
+            :index="frameProps.frameIndex"
+            @close="frameProps.adding = false"
+            @add-frame="addKeyFrame"
+            @edit-frame="editKeyFrame"
         />
     </div>
 </template>
@@ -36,11 +51,15 @@
 import KeyFrameManager from '../classes/KeyFrameManager';
 import { Modes, Types } from '../classes/ShapeEditor';
 import AddPointModal from './AddPointModal.vue';
+import FrameModal from './FrameModal.vue';
+import TimeLine from './TimeLine.vue';
 const modes = Modes;
 const types = Types;
 export default {
     components: {
-        AddPointModal
+        AddPointModal,
+        FrameModal,
+        TimeLine
     },
     data(){
         return {
@@ -55,6 +74,11 @@ export default {
                 y: 0
             },
             addIndex: -1,
+            frameProps: {
+                adding: false,
+                frameToAdd: 2,
+                frameIndex: -1
+            }
         };
     },
     computed: {
@@ -88,6 +112,7 @@ export default {
         },
         onPointModalClose(e){
             if(e){
+                console.log(e);
                 const values = e.feilds.map(item => item.value);
                 this.keyFrameManager.insertDirective(e.type, values, e.index >= 0 ? e.index : undefined);
                 this.d = this.shape.render();
@@ -95,8 +120,17 @@ export default {
             this.adding = false;
             this.addIndex = -1;
         },
-        addKeyFrame(){
-            this.keyFrameManager.addKeyFrame(this.keyFrameManager.frames[0]);
+        openFrameModal(frame, index){
+            this.frameProps.frameToAdd = frame;
+            this.frameProps.frameIndex = index !== undefined ? index : -1;
+            this.frameProps.adding = true;
+        },
+        addKeyFrame(e){
+            console.log(e);
+            this.keyFrameManager.addKeyFrame(this.keyFrameManager.frames[0], e.frame);
+        },
+        editKeyFrame(e){
+            this.keyFrameManager.frames[e.index].position = e.frame;
         },
         setKeyFrame(frame){
             this.currentKeyFrame = frame;

@@ -1,4 +1,5 @@
 import {PixiInstance, PixiAction, PixiDraw, PixiUtils} from '../utils/PixiManager.js'
+import {createUniqueID} from '../utils/Utilities';
 export default class ShapeEditor{
     constructor(element, width, height, updateHandler, addHandler){
         this.width = width ? width : 1000;
@@ -36,10 +37,19 @@ export default class ShapeEditor{
     setAddHandler(handler){
         this.addHandler = handler;
     }
+    getDirectiveIndexByGroup(group){
+        return this.directiveManifest
+            .map((item, index) => {
+                return { group: item.pointers[0].group, index }
+            })
+            .find(item => item.group === group).index;
+    }
     addDirective(_directive, index){
-        const _index = index === undefined ? this.directiveManifest.length : index;
+        // const _index = index === undefined ? this.directiveManifest.length : index;
         const directive = _directive;
+        const groupID = createUniqueID();
         let pointers = [];
+        
         if(directive.values.length > 1){
             pointers = [...new Array(directive.values.length / 2).keys()].map(item => {
                 return {
@@ -50,6 +60,7 @@ export default class ShapeEditor{
                 const outerCircle = this.draw.circle({radius: 8, fill: 0x000000});
                 const innerCircle = this.draw.circle({radius: 5, fill: 0xFFFFFF});
                 const pointer = this.utils.sprite();
+                pointer.group = groupID;
                 pointer.addChild(outerCircle);
                 pointer.addChild(innerCircle);
                 pointer.x = item.x;
@@ -63,7 +74,8 @@ export default class ShapeEditor{
                         this.dragTarget.x = e.x;
                         this.dragTarget.y = e.y;
                         if(this.updateHandler){
-                            this.updateHandler({ directive: this.directiveManifest[_index].directive, index, position: { x: e.x, y: e.y } });
+                            console.log(pointer.group);
+                            this.updateHandler({ directive: this.directiveManifest[this.getDirectiveIndexByGroup(pointer.group)].directive, index, position: { x: e.x, y: e.y } });
                         }
                         this.arrangeInsertButtons();
                     }
@@ -72,7 +84,7 @@ export default class ShapeEditor{
                 this.action.up(pointer, (e) => {
                     if(this.dragTarget === pointer){
                         if(this.updateHandler){
-                            this.updateHandler({ directive: this.directiveManifest[_index].directive, index, position: { x: e.x, y: e.y } });
+                            this.updateHandler({ directive: this.directiveManifest[this.getDirectiveIndexByGroup(pointer.group)].directive, index, position: { x: e.x, y: e.y } });
                         }
                         this.arrangeInsertButtons();
                     }
