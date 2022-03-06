@@ -5,7 +5,7 @@
             :key="`frame-${i}`"
             class="frame"
         >
-            <slot :name="i+1">
+            <slot :name="i">
                 <div class="empty-frame">
 
                 </div>

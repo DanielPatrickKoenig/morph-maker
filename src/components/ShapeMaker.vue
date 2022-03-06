@@ -6,6 +6,7 @@
             </li>
         </ul>
         <button @click="openFrameModal(currentKeyFrame.position + 1)">Add Keyframe</button>
+        <button @click="exporting = true">Export</button>
         <div 
             class="stage-container"
         >
@@ -44,6 +45,7 @@
             @add-frame="addKeyFrame"
             @edit-frame="editKeyFrame"
         />
+        <ExportModal v-if="exporting" @export-frames="onExport" @close="exporting = false" />
     </div>
 </template>
 
@@ -52,6 +54,7 @@ import KeyFrameManager from '../classes/KeyFrameManager';
 import { Modes, Types } from '../classes/ShapeEditor';
 import AddPointModal from './AddPointModal.vue';
 import FrameModal from './FrameModal.vue';
+import ExportModal from './ExportModal.vue';
 import TimeLine from './TimeLine.vue';
 const modes = Modes;
 const types = Types;
@@ -59,6 +62,7 @@ export default {
     components: {
         AddPointModal,
         FrameModal,
+        ExportModal,
         TimeLine
     },
     data(){
@@ -78,7 +82,8 @@ export default {
                 adding: false,
                 frameToAdd: 2,
                 frameIndex: -1
-            }
+            },
+            exporting: false
         };
     },
     computed: {
@@ -135,6 +140,9 @@ export default {
         setKeyFrame(frame){
             this.currentKeyFrame = frame;
             this.editor.mapToDirectives(this.shape.directives);
+        },
+        onExport(e){
+            console.log(this.keyFrameManager.exportFrames(e.name));
         }
     },
     mounted () {

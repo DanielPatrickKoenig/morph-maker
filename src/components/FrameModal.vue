@@ -15,7 +15,7 @@ export default {
     props: {
         frame: {
             type: Number,
-            default: 1,
+            default: 0,
         },
         index: {
             type: Number,

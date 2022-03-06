@@ -1,6 +1,6 @@
 import SVGShape from './SVGShape';
 export default class KeyFrame{
-    constructor(position = 1){
+    constructor(position = 0){
         this.position = position;
         this.shape = new SVGShape({directives:[]});
     }

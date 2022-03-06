@@ -11,7 +11,7 @@ export default class KeyFrameManager{
         this.addHandler = addHandler;
         this.editor = new ShapeEditor(stage, 1000, 800, updateHandler, addHandler);
         this.frames = [new KeyFrame()];
-        this.positionCount = 100;
+        this.positionCount = 101;
         
     }
     addKeyFrame(copyFrom, position, index){
@@ -76,5 +76,9 @@ export default class KeyFrameManager{
             this.editor.addDirective(directive, index);
         }
         return directive;
+    }
+    exportFrames(name){
+        const frameContent = this.frames.map(item => `${item.position}%{d:path("${item.shape.render()}");}`).join('');
+        return `@keyframes ${name}{${frameContent}}`;
     }
 }

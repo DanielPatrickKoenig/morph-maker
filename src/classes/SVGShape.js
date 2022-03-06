@@ -18,6 +18,6 @@ export default class SVGShape{
     }
     render(){
         // console.log(this.directives);
-        return this.directives.map(item => item.process()).join('');
+        return `${this.directives.map(item => item.process()).join('')}Z`;
     }
 }
